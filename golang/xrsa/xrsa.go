@@ -163,6 +163,9 @@ func MarshalPKCS8PrivateKey(key *rsa.PrivateKey) []byte {
 	return k
 }
 
+func (r *XRsa) GetPublicKey() *rsa.PublicKey {
+	return r.publicKey
+}
 func split(buf []byte, lim int) [][]byte {
 	var chunk []byte
 	chunks := make([][]byte, 0, len(buf)/lim+1)
