@@ -9,7 +9,6 @@ import (
 	"errors"
 	"crypto"
 	"io"
-	"bytes"
 	"encoding/asn1"
 )
 
@@ -90,37 +89,22 @@ func NewXRsa(publicKey []byte, privateKey []byte) (*XRsa, error) {
 	}
 }
 
-func (r *XRsa) PublicEncrypt(data string) (string, error) {
-	partLen := r.publicKey.N.BitLen() / 8 - 11
-	chunks := split([]byte(data), partLen)
-
-	buffer := bytes.NewBufferString("")
-	for _, chunk := range chunks {
-		bytes, err := rsa.EncryptPKCS1v15(rand.Reader, r.publicKey, chunk)
-		if err != nil {
-			return "", err
-		}
-		buffer.Write(bytes)
+func (r *XRsa) PublicEncrypt(data []byte) ([]byte, error) {
+	bytes, err := rsa.EncryptPKCS1v15(rand.Reader, r.publicKey, []byte(data))
+	if err != nil {
+		return nil, err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(buffer.Bytes()), nil
+	return bytes, nil
 }
 
-func (r *XRsa) PrivateDecrypt(encrypted string) (string, error) {
-	partLen := r.publicKey.N.BitLen() / 8
-	raw, err := base64.RawURLEncoding.DecodeString(encrypted)
-	chunks := split([]byte(raw), partLen)
-
-	buffer := bytes.NewBufferString("")
-	for _, chunk := range chunks {
-		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, r.privateKey, chunk)
-		if err != nil {
-			return "", err
-		}
-		buffer.Write(decrypted)
+func (r *XRsa) PrivateDecrypt(encrypted []byte) ([]byte, error) {
+	decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, r.privateKey, encrypted)
+	if err != nil {
+		return nil, err
 	}
 
-	return buffer.String(), err
+	return decrypted, err
 }
 
 func (r *XRsa) Sign(data string) (string, error) {
